@@ -1,0 +1,56 @@
+ # Python虚拟环境
+venv/
+env/
+ENV/
+
+# Python编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 分发/打包
+dist/
+build/
+*.egg-info/
+
+# 单元测试/覆盖率报告
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+coverage.xml
+*.cover
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 日志文件
+*.log
+
+# 本地配置
+instance/
+.webassets-cache
+
+# 数据库文件
+*.db
+*.sqlite3
+
+# 前端相关
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
