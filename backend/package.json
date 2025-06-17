@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "dart-sass": "^1.25.0",
+    "sass": "^1.69.5",
+    "sass-loader": "^13.3.2"
+  }
+}

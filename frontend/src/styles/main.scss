@@ -1,0 +1,75 @@
+// Variables
+$primary-color: #409EFF;
+$text-color: #303133;
+$border-color: #DCDFE6;
+$background-color: #F5F7FA;
+
+// Global styles
+* {
+  box-sizing: border-box;
+}
+
+// Responsive breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+
+// Mixins
+@mixin mobile {
+  @media (max-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+// Global classes
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  
+  @include mobile {
+    padding: 0 0.5rem;
+  }
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+// Element Plus 主题覆盖
+:root {
+  --el-color-primary: #{$primary-color};
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+} 

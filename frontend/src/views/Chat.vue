@@ -1,315 +1,268 @@
 <template>
-  <div class="chat-container">
-    <!-- 左侧会话列表 -->
-    <div class="chat-sidebar">
-      <div class="sidebar-header">
-        <h2>{{ currentApp.name }}</h2>
-        <el-button type="primary" @click="createNewSession">新建会话</el-button>
-      </div>
-      <div class="session-list">
-        <div
-          v-for="session in chatSessions"
-          :key="session.id"
-          :class="['session-item', { active: currentSession?.id === session.id }]"
-          @click="selectSession(session)"
-        >
-          <div class="session-title">{{ session.title }}</div>
-          <div class="session-time">{{ formatDate(session.updated_at) }}</div>
-          <el-button
-            class="delete-btn"
-            type="text"
-            @click.stop="deleteSession(session.id)"
-          >
-            删除
-          </el-button>
-        </div>
-      </div>
+    <div class="chat-container">
+      <el-container>
+        <el-aside width="300px" class="chat-sidebar">
+          <div class="sidebar-header">
+            <h3>会话列表</h3>
+            <el-button
+              type="primary"
+              :icon="Plus"
+              circle
+              @click="handleNewChat"
+            />
+          </div>
+  
+          <el-scrollbar class="session-list">
+            <div
+              v-for="session in chatStore.sessions"
+              :key="session.id"
+              class="session-item"
+              :class="{ active: session.id === chatStore.currentSessionId }"
+              @click="handleSelectSession(session)"
+            >
+              <div class="session-info">
+                <h4>{{ session.title }}</h4>
+                <p>{{ formatTime(session.updatedAt) }}</p>
+              </div>
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                @click.stop="handleDeleteSession(session)"
+              />
+            </div>
+          </el-scrollbar>
+        </el-aside>
+  
+        <el-container class="chat-main">
+          <template v-if="chatStore.currentSession">
+            <div class="chat-messages" ref="messagesRef">
+              <el-scrollbar ref="scrollbarRef">
+                <message-item
+                  v-for="message in chatStore.currentSession.messages"
+                  :key="message.id"
+                  :message="message"
+                />
+              </el-scrollbar>
+            </div>
+  
+            <div class="chat-input">
+              <el-input
+                v-model="inputMessage"
+                type="textarea"
+                :rows="3"
+                placeholder="输入消息..."
+                resize="none"
+                @keydown.enter.prevent="handleSendMessage"
+              />
+              <el-button
+                type="primary"
+                :icon="Position"
+                :loading="sending"
+                @click="handleSendMessage"
+              >
+                发送
+              </el-button>
+            </div>
+          </template>
+  
+          <div v-else class="chat-empty">
+            <el-empty description="选择一个会话或创建新会话" />
+          </div>
+        </el-container>
+      </el-container>
     </div>
-
-    <!-- 右侧聊天区域 -->
-    <div class="chat-main">
-      <div class="chat-messages" ref="messagesContainer">
-        <div
-          v-for="message in messages"
-          :key="message.id"
-          :class="['message', message.role]"
-        >
-          <div class="message-content">{{ message.content }}</div>
-          <div class="message-time">{{ formatDate(message.created_at) }}</div>
-        </div>
-      </div>
-      <div class="chat-input">
-        <el-input
-          v-model="newMessage"
-          type="textarea"
-          :rows="3"
-          placeholder="输入消息..."
-          @keyup.enter.ctrl="sendMessage"
-        />
-        <div class="input-actions">
-          <el-upload
-            action="#"
-            :auto-upload="false"
-            :on-change="handleFileChange"
-          >
-            <el-button type="primary" plain>上传文件</el-button>
-          </el-upload>
-          <el-button type="primary" @click="sendMessage">发送</el-button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script>
-import { ref, onMounted, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
-import axios from 'axios'
-
-export default {
-  name: 'Chat',
-  setup() {
-    const route = useRoute()
-    const appId = route.params.appId
-    const currentApp = ref({})
-    const chatSessions = ref([])
-    const currentSession = ref(null)
-    const messages = ref([])
-    const newMessage = ref('')
-    const messagesContainer = ref(null)
-
-    const fetchAppInfo = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/ai-apps/${appId}`)
-        currentApp.value = response.data
-      } catch (error) {
-        console.error('Error fetching app info:', error)
+  </template>
+  
+  <script setup lang="ts">
+  import { ref, onMounted, nextTick, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { ElMessageBox } from 'element-plus'
+  import { Plus, Delete, Position } from '@element-plus/icons-vue'
+  import { useChatStore } from '@/stores/chat'
+  import { formatDate } from '@/utils'
+  import MessageItem from '@/components/chat/MessageItem.vue'
+  import type { ChatSession } from '@/types'
+  
+  const route = useRoute()
+  const router = useRouter()
+  const chatStore = useChatStore()
+  
+  const inputMessage = ref('')
+  const sending = ref(false)
+  const messagesRef = ref<HTMLElement>()
+  const scrollbarRef = ref()
+  
+  // 监听路由参数变化
+  watch(
+    () => route.params.moduleId,
+    async (moduleId) => {
+      if (moduleId) {
+        await chatStore.createSession(moduleId as string)
       }
+    },
+    { immediate: true }
+  )
+  
+  // 监听消息列表变化，自动滚动到底部
+  watch(
+    () => chatStore.currentSession?.messages,
+    async () => {
+      await nextTick()
+      scrollToBottom()
+    },
+    { deep: true }
+  )
+  
+  onMounted(async () => {
+    await chatStore.fetchSessions()
+    if (chatStore.sessions.length > 0) {
+      chatStore.setCurrentSession(chatStore.sessions[0].id)
     }
-
-    const fetchSessions = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/chat/sessions/${appId}`)
-        chatSessions.value = response.data
-      } catch (error) {
-        console.error('Error fetching sessions:', error)
+  })
+  
+  function formatTime(timestamp: number) {
+    return formatDate(timestamp)
+  }
+  
+  async function handleNewChat() {
+    router.push('/modules')
+  }
+  
+  function handleSelectSession(session: ChatSession) {
+    chatStore.setCurrentSession(session.id)
+  }
+  
+  async function handleDeleteSession(session: ChatSession) {
+    try {
+      await ElMessageBox.confirm('确定要删除这个会话吗？', '提示', {
+        type: 'warning',
+      })
+      await chatStore.deleteSession(session.id)
+    } catch (error) {
+      if (error !== 'cancel') {
+        console.error('删除会话失败:', error)
       }
-    }
-
-    const fetchMessages = async (sessionId) => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/chat/messages/${sessionId}`)
-        messages.value = response.data
-        await nextTick()
-        scrollToBottom()
-      } catch (error) {
-        console.error('Error fetching messages:', error)
-      }
-    }
-
-    const createNewSession = async () => {
-      try {
-        const response = await axios.post('http://localhost:5000/api/chat/sessions', {
-          ai_app_id: appId,
-          title: '新会话'
-        })
-        chatSessions.value.unshift(response.data)
-        currentSession.value = response.data
-        messages.value = []
-      } catch (error) {
-        console.error('Error creating session:', error)
-      }
-    }
-
-    const selectSession = (session) => {
-      currentSession.value = session
-      fetchMessages(session.id)
-    }
-
-    const deleteSession = async (sessionId) => {
-      try {
-        await axios.delete(`http://localhost:5000/api/chat/sessions/${sessionId}`)
-        chatSessions.value = chatSessions.value.filter(s => s.id !== sessionId)
-        if (currentSession.value?.id === sessionId) {
-          currentSession.value = null
-          messages.value = []
-        }
-      } catch (error) {
-        console.error('Error deleting session:', error)
-      }
-    }
-
-    const sendMessage = async () => {
-      if (!newMessage.value.trim() || !currentSession.value) return
-
-      try {
-        // 发送用户消息
-        const userMessage = await axios.post('http://localhost:5000/api/chat/messages', {
-          session_id: currentSession.value.id,
-          role: 'user',
-          content: newMessage.value
-        })
-        messages.value.push(userMessage.data)
-
-        // 模拟AI回复
-        const aiMessage = await axios.post('http://localhost:5000/api/chat/messages', {
-          session_id: currentSession.value.id,
-          role: 'assistant',
-          content: newMessage.value // 这里应该调用实际的AI服务
-        })
-        messages.value.push(aiMessage.data)
-
-        newMessage.value = ''
-        await nextTick()
-        scrollToBottom()
-      } catch (error) {
-        console.error('Error sending message:', error)
-      }
-    }
-
-    const handleFileChange = (file) => {
-      // 处理文件上传
-      console.log('File changed:', file)
-    }
-
-    const scrollToBottom = () => {
-      if (messagesContainer.value) {
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-      }
-    }
-
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleString()
-    }
-
-    onMounted(() => {
-      fetchAppInfo()
-      fetchSessions()
-    })
-
-    return {
-      currentApp,
-      chatSessions,
-      currentSession,
-      messages,
-      newMessage,
-      messagesContainer,
-      createNewSession,
-      selectSession,
-      deleteSession,
-      sendMessage,
-      handleFileChange,
-      formatDate
     }
   }
-}
-</script>
-
-<style scoped>
-.chat-container {
-  display: flex;
-  height: 100vh;
-}
-
-.chat-sidebar {
-  width: 300px;
-  border-right: 1px solid #eee;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.sidebar-header h2 {
-  margin-bottom: 15px;
-}
-
-.session-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.session-item {
-  padding: 15px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  position: relative;
-}
-
-.session-item:hover {
-  background-color: #f5f7fa;
-}
-
-.session-item.active {
-  background-color: #ecf5ff;
-}
-
-.session-title {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.session-time {
-  font-size: 12px;
-  color: #999;
-}
-
-.delete-btn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.chat-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.message {
-  margin-bottom: 20px;
-  max-width: 70%;
-}
-
-.message.user {
-  margin-left: auto;
-}
-
-.message-content {
-  padding: 10px 15px;
-  border-radius: 10px;
-  background-color: #f4f4f5;
-}
-
-.message.user .message-content {
-  background-color: #ecf5ff;
-}
-
-.message-time {
-  font-size: 12px;
-  color: #999;
-  margin-top: 5px;
-}
-
-.chat-input {
-  padding: 20px;
-  border-top: 1px solid #eee;
-}
-
-.input-actions {
-  margin-top: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-</style> 
+  
+  async function handleSendMessage() {
+    if (!inputMessage.value.trim() || sending.value) return
+  
+    try {
+      sending.value = true
+      await chatStore.sendMessage(inputMessage.value)
+      inputMessage.value = ''
+    } catch (error) {
+      console.error('发送消息失败:', error)
+    } finally {
+      sending.value = false
+    }
+  }
+  
+  function scrollToBottom() {
+    if (scrollbarRef.value) {
+      const scrollbar = scrollbarRef.value.wrap$
+      scrollbar.scrollTop = scrollbar.scrollHeight
+    }
+  }
+  </script>
+  
+  <style scoped lang="scss">
+  .chat-container {
+    height: 100%;
+    background-color: var(--el-bg-color);
+  }
+  
+  .chat-sidebar {
+    border-right: 1px solid var(--el-border-color-light);
+    background-color: var(--el-bg-color-overlay);
+  
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--el-border-color-light);
+  
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+    }
+  
+    .session-list {
+      height: calc(100% - 57px);
+  
+      .session-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+  
+        &:hover {
+          background-color: var(--el-fill-color-light);
+        }
+  
+        &.active {
+          background-color: var(--el-color-primary-light-9);
+        }
+  
+        .session-info {
+          flex: 1;
+          min-width: 0;
+          margin-right: 12px;
+  
+          h4 {
+            margin: 0 0 4px;
+            font-size: 14px;
+            font-weight: 500;
+            @include text-ellipsis;
+          }
+  
+          p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--el-text-color-secondary);
+          }
+        }
+      }
+    }
+  }
+  
+  .chat-main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .chat-messages {
+    flex: 1;
+    overflow: hidden;
+  
+    :deep(.el-scrollbar__wrap) {
+      overflow-x: hidden;
+    }
+  }
+  
+  .chat-input {
+    padding: 16px;
+    border-top: 1px solid var(--el-border-color-light);
+    background-color: var(--el-bg-color-overlay);
+  
+    .el-button {
+      margin-top: 12px;
+      width: 100%;
+    }
+  }
+  
+  .chat-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  </style>

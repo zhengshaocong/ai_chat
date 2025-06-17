@@ -1,0 +1,12 @@
+{
+    "vetur.ignoreProjectWarning": true,
+    "vetur.experimental.templateInterpolationService": true,
+    "vetur.resolveExtensions": [
+      ".ts",
+      ".js",
+      ".vue"
+    ],
+    "vetur.autoImport": "@/types/components.d.ts",
+    "vetur.format.defaultFormatter.js": "prettier",
+    "vetur.format.defaultFormatter.ts": "prettier"
+  }
