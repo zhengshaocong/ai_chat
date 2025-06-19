@@ -58,12 +58,12 @@ export interface PaginatedResponse<T> {
 }
 
 export interface ChatSession {
-  id: string
+  id: number
+  ai_app_id: number
   title: string
+  created_at: string
+  updated_at: string
   messages: Message[]
-  moduleId: string
-  createdAt: number
-  updatedAt: number
 }
 
 export interface AIModule {

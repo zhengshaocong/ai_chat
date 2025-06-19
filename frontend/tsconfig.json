@@ -1,33 +1,47 @@
 {
+  // TypeScript 编译器配置选项
   "compilerOptions": {
+    // 目标 ECMAScript 版本
+    "target": "ES2020",
+    // 模块系统
+    "module": "ESNext",
+    // 模块解析策略：使用 bundler 模式，适合 Vite
+    "moduleResolution": "bundler",
+    // 启用 ES 模块互操作性
+    "esModuleInterop": true,
+    // 允许从没有默认导出的模块中导入默认导出
+    "allowSyntheticDefaultImports": true,
+    // 启用项目引用功能
     "composite": true,
-    "declaration": true,     // 必须允许生成声明文件
-    "emitDeclarationOnly": false,
-
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-
-    /* Linting */
+    // 生成声明文件
+    "declaration": true,
+    // 跳过库文件检查
+    "skipLibCheck": true,
+    // 解析 JSON 模块
+    "resolveJsonModule": true,
+    // 隔离模块
+    "isolatedModules": true,
+    // 启用严格模式
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    /* 新增ES特性库 */
-    "lib": ["ES2015", "DOM"],
-
+    // JavaScript 运行时库
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    // 编译输出目录
     "outDir": "./dist",
-    "types": ["element-plus/global","echarts"],
-    // 显式保留主配置的 paths/baseUrl（可选）
+    // 包含的类型定义库
+    "types": ["vite/client", "element-plus/global", "vue"],
+    // 基础路径配置
     "baseUrl": ".",
+    // 路径映射配置
     "paths": {
       "@/*": ["src/*"]
     }
   },
+  // 包含的文件和目录
   "include": [
-    "src/**/*.ts",        // 包含 src 目录下所有 TS 文件
-    "src/**/*.tsx",       // 包含 src 目录下所有 TSX 文件
-    "src/**/*.vue",       // 包含 src 目录下所有 Vue 文件
-    "./auto-imports.d.ts", // 包含自动导入的类型声明
-    "./components.d.ts"   // 包含自动注册组件的类型声明
+    "src/**/*.ts",
+    "src/**/*.tsx", 
+    "src/**/*.vue",
+    "src/**/*.d.ts",
+    "vite.config.ts"
   ]
 }

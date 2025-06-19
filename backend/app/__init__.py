@@ -19,9 +19,11 @@ def create_app():
     from app.controllers.ai_app_controller import ai_app_bp
     from app.controllers.chat_controller import chat_bp
     from app.controllers.auth_controller import auth_bp
+    from app.controllers.qwen_controller import qwen_bp
 
     app.register_blueprint(ai_app_bp, url_prefix='/ai-apps')
     app.register_blueprint(chat_bp, url_prefix='/chat')
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(qwen_bp, url_prefix='/qwen')
 
     return app 

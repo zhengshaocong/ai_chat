@@ -9,7 +9,7 @@
           <template v-if="typeof part === 'string'">
             {{ part }}
           </template>
-          <code-block
+          <CodeBlock
             v-else
             :code="part.code"
             :language="part.language"

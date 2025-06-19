@@ -22,7 +22,7 @@
             >
               <div class="session-info">
                 <h4>{{ session.title }}</h4>
-                <p>{{ formatTime(session.updatedAt) }}</p>
+                <p>{{ formatTime(session.updated_at) }}</p>
               </div>
               <el-button
                 type="danger"
@@ -98,7 +98,11 @@
     () => route.params.moduleId,
     async (moduleId) => {
       if (moduleId) {
-        await chatStore.createSession(moduleId as string)
+        // 将字符串转换为数字
+        const appId = parseInt(moduleId as string, 10)
+        if (!isNaN(appId)) {
+          await chatStore.createSession(appId)
+        }
       }
     },
     { immediate: true }
@@ -115,14 +119,19 @@
   )
   
   onMounted(async () => {
-    await chatStore.fetchSessions()
-    if (chatStore.sessions.length > 0) {
-      chatStore.setCurrentSession(chatStore.sessions[0].id)
+    // 从路由参数获取 appId，如果没有则使用默认值 1
+    const appId = route.params.moduleId ? parseInt(route.params.moduleId as string, 10) : 1
+    console.log(appId)
+    if (!isNaN(appId)) {
+      await chatStore.fetchSessions(appId)
+      if (chatStore.sessions.length > 0) {
+        chatStore.setCurrentSession(chatStore.sessions[0].id)
+      }
     }
   })
   
-  function formatTime(timestamp: number) {
-    return formatDate(timestamp)
+  function formatTime(timestamp: string) {
+    return formatDate(new Date(timestamp).getTime())
   }
   
   async function handleNewChat() {
