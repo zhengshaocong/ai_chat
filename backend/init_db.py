@@ -1,6 +1,6 @@
 from app import create_app
 from app.models.models import AIApp, ChatSession, ChatSessionDetail, User
-from config.database import SessionLocal, Base, engine
+from config import SessionLocal, Base, engine
 
 def init_db():
     # 删除所有现有表

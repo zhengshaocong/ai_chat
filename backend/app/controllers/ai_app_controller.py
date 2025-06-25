@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.services.ai_app_service import AIAppService
-from config.database import get_db
+from config import get_db
 
 ai_app_bp = Blueprint('ai_app', __name__)
 ai_app_service = AIAppService()

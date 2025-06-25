@@ -1,5 +1,5 @@
 from app.models.models import User
-from config.database import SessionLocal
+from config import SessionLocal
 from datetime import datetime, timedelta
 import jwt
 from flask import current_app

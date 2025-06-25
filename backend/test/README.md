@@ -176,4 +176,59 @@ def my_custom_test():
     
     result = service.chat_with_qwen("测试消息", history=scenario_history)
     print(result)
-``` 
+```
+
+# 通义千问天气助手
+
+这个项目实现了基于通义千问模型的天气查询助手，通过接入高德地图API实现实时天气查询功能。
+
+## 功能特点
+
+- 集成通义千问大模型（qwen-turbo）
+- 接入高德地图天气API
+- 支持通过城市名称或城市编码查询天气
+- 支持自然语言交互
+
+## 使用方法
+
+1. 确保已安装所需依赖：
+
+```bash
+pip install requests dashscope
+```
+
+2. 替换API密钥：
+   - 在`weather_assistant.py`中替换你的通义千问API密钥
+   - 如果需要，也可以更换高德地图API密钥
+
+3. 运行程序：
+
+```bash
+python weather_assistant.py
+```
+
+4. 开始对话，例如：
+   - "北京今天的天气怎么样？"
+   - "上海现在的温度是多少？"
+   - "杭州会下雨吗？"
+
+## 实现原理
+
+1. 程序使用Function Calling机制，定义了`get_current_weather`函数用于获取天气信息
+2. 当用户询问天气时，通义千问模型会决定是否调用此函数
+3. 如果需要查询天气，程序会调用高德地图API获取实时天气数据
+4. 然后将API返回的数据提供给通义千问模型，生成自然语言回复
+
+## 代码结构
+
+- `weather_assistant.py`: 主程序文件
+  - `weather_tool`: 天气工具函数定义
+  - `get_weather_from_gaode()`: 调用高德地图API获取天气
+  - `chat_with_weather_assistant()`: 处理与模型的交互
+  - `main()`: 主函数，实现交互式对话
+
+## 注意事项
+
+- 确保网络连接正常
+- API密钥有使用限制，请合理使用
+- 城市名称需要是中国城市 

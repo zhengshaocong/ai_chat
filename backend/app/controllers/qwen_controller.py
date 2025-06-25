@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.services.qwen_service import QwenService
-from config.database import get_db
+from config import get_db
 
 qwen_bp = Blueprint('qwen', __name__)
 qwen_service = QwenService()

@@ -3,8 +3,10 @@ import requests
 import json
 from typing import Dict, Any, List, Optional
 from app.models.models import ChatSessionDetail
-from config.database import get_db
+from config import get_db
 from datetime import datetime
+import dashscope
+import time
 
 class QwenService:
     def __init__(self, model_name: str = "qwen-turbo", test_mode: bool = False):
@@ -86,7 +88,7 @@ class QwenService:
             response = requests.post(
                 f"{self.base_url}/services/aigc/text-generation/generation",
                 headers=headers,
-                json=payload,
+                data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
                 timeout=30
             )
             

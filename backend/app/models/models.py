@@ -1,7 +1,8 @@
+import enum
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from config.database import Base
+from config import Base
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class AIApp(Base):

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.services.chat_service import ChatService
-from config.database import get_db
+from config import get_db
 
 chat_bp = Blueprint('chat', __name__)
 chat_service = ChatService()
